@@ -17,7 +17,8 @@ import {
   Trash2,
   ChevronRight,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  WifiOff
 } from 'lucide-react';
 import { AppView, BirdSpecies, Observation } from './types';
 import { getAll, putItem, deleteItem, clearStore, getItem } from './db';
@@ -37,6 +38,7 @@ const App: React.FC = () => {
   const [observations, setObservations] = useState<Observation[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [storedAdminPin, setStoredAdminPin] = useState(DEFAULT_ADMIN_PIN);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const fetchData = useCallback(async () => {
     const s = await getAll<BirdSpecies>('species');
@@ -52,6 +54,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, [fetchData]);
 
   const handleAdminAuth = () => {
@@ -136,6 +149,13 @@ const App: React.FC = () => {
           </nav>
 
           <div className="mt-auto space-y-4">
+            {!isOnline && (
+              <div className="flex items-center justify-center space-x-2 p-3 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold border border-amber-100">
+                <WifiOff size={14} />
+                <span>离线模式：AI功能受限</span>
+              </div>
+            )}
+            
             <div className="pt-4 border-t border-slate-100">
               {isAdmin ? (
                 <button

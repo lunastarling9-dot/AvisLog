@@ -61,6 +61,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
     resetManualForm();
   };
 
+  const handlePinUpdate = async () => {
+    if (pinChange.old !== currentPin) {
+      alert('原 PIN 码输入错误');
+      return;
+    }
+    if (pinChange.new.length < 4) {
+      alert('新 PIN 码长度至少为 4 位');
+      return;
+    }
+    if (pinChange.new !== pinChange.confirm) {
+      alert('两次输入的密码不一致');
+      return;
+    }
+
+    await putItem('settings', { key: 'adminPin', value: pinChange.new });
+    alert('管理员 PIN 码已成功更新！');
+    setPinChange({ old: '', new: '', confirm: '' });
+    onUpdate();
+  };
+
   const resetManualForm = () => {
     setName(''); setLatinName('');
     setTaxonomy({ class: '鸟纲', order: '', family: '', genus: '', species: '' });
@@ -89,7 +109,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
       setIsAiAdding(false);
       setAiText('');
     } catch (err) {
-      alert('AI 解析失败，请检查输入或 API Key');
+      alert('AI 解析失败，请检查网络或 API Key');
     } finally {
       setIsParsing(false);
     }
@@ -152,7 +172,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-200">
                   <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-wider">物种名称 (拉丁名)</th>
-                  <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-wider">完整分类 (纲目科属)</th>
+                  <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-wider">完整分类</th>
                   <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-wider">理论分布</th>
                   <th className="px-6 py-4 text-xs font-black uppercase text-slate-400 tracking-wider text-right">管理</th>
                 </tr>
@@ -189,6 +209,64 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
         </div>
       )}
 
+      {activeTab === 'security' && (
+        <div className="max-w-xl mx-auto p-8 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in">
+           <div className="flex items-center space-x-4 mb-8">
+              <div className="p-3 bg-amber-50 rounded-2xl">
+                <Shield className="text-amber-600" size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">修改管理员 PIN 码</h3>
+                <p className="text-sm text-slate-500">保护您的系统设置与数据安全</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">当前 PIN 码</label>
+                <input 
+                  type="password" 
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500" 
+                  value={pinChange.old}
+                  onChange={e => setPinChange({...pinChange, old: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">新 PIN 码</label>
+                  <input 
+                    type="password" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500" 
+                    value={pinChange.new}
+                    onChange={e => setPinChange({...pinChange, new: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">确认新 PIN 码</label>
+                  <input 
+                    type="password" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500" 
+                    value={pinChange.confirm}
+                    onChange={e => setPinChange({...pinChange, confirm: e.target.value})}
+                  />
+                </div>
+              </div>
+              <button 
+                onClick={handlePinUpdate}
+                className="w-full py-4 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-all flex items-center justify-center space-x-2 mt-4"
+              >
+                <Lock size={18} />
+                <span>更新管理员密码</span>
+              </button>
+            </div>
+            
+            <div className="mt-8 flex items-start space-x-3 p-4 bg-slate-50 rounded-2xl text-[11px] text-slate-400">
+               <AlertCircle size={14} className="flex-shrink-0" />
+               <p>PIN 码保存在本地 IndexedDB 中，如果清除浏览器数据，PIN 码将重置为默认值 (8888)。请务必定期导出数据备份。</p>
+            </div>
+        </div>
+      )}
+
       {activeTab === 'sync' && (
         <div className="max-w-2xl mx-auto space-y-6 animate-in">
           <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
@@ -198,7 +276,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
               </div>
               <div>
                 <h3 className="text-lg font-bold">BYOS 云端同步 (Beta)</h3>
-                <p className="text-sm text-slate-500">连接您自己的云存储空间，实现零成本数据同步</p>
+                <p className="text-sm text-slate-500">连接您自己的云存储空间，实现私有数据同步</p>
               </div>
             </div>
 
@@ -234,30 +312,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
              <Globe className="text-emerald-600 flex-shrink-0" size={20} />
              <div className="text-xs text-emerald-800 leading-relaxed">
                <p className="font-bold mb-1">为什么使用 WebDAV？</p>
-               <p>AvisLog 是一款本地优先的应用。通过 WebDAV，您可以将数据同步到坚果云、Nextcloud 甚至您自家的 NAS。我们不接触您的任何隐私，数据只在您的设备和您的云盘之间传输。</p>
+               <p>AvisLog 是一款本地优先的应用。通过 WebDAV，您可以将数据同步到坚果云、Nextcloud 甚至您自家的 NAS。数据只在您的设备和您的云盘之间传输，极具隐私安全性。</p>
              </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'security' && (
-        <div className="max-w-xl mx-auto p-8 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in">
-           {/* Security PIN Change Form - Same as before */}
-           <div className="flex items-center space-x-4 mb-8">
-              <div className="p-3 bg-amber-50 rounded-2xl">
-                <Shield className="text-amber-600" size={24} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold">修改管理员 PIN 码</h3>
-                <p className="text-sm text-slate-500">用于锁定管理功能</p>
-              </div>
-            </div>
-            {/* Form Fields... */}
-            <p className="text-center text-slate-400 text-xs mt-10 italic">安全设置内容已在前一版本实现，此处保持一致</p>
-        </div>
-      )}
-
-      {/* Manual Add Modal - ENHANCED with Taxonomy and Distribution */}
+      {/* Manual Add Modal */}
       {isManualAdding && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
           <div className="bg-white rounded-[2rem] w-full max-w-3xl shadow-2xl animate-in my-auto">
@@ -270,7 +331,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
             </div>
             
             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
-              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">中文名称</label>
@@ -282,34 +342,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
                 </div>
               </div>
 
-              {/* Taxonomy Section */}
               <div className="space-y-4">
                  <h4 className="text-sm font-black text-emerald-700 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">生物分类学 (Taxonomy)</h4>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">纲 (Class)</label>
-                      <input type="text" className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" value={taxonomy.class} onChange={e => setTaxonomy({...taxonomy, class: e.target.value})} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">目 (Order)</label>
-                      <input type="text" className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" value={taxonomy.order} onChange={e => setTaxonomy({...taxonomy, order: e.target.value})} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">科 (Family)</label>
-                      <input type="text" className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" value={taxonomy.family} onChange={e => setTaxonomy({...taxonomy, family: e.target.value})} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">属 (Genus)</label>
-                      <input type="text" className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" value={taxonomy.genus} onChange={e => setTaxonomy({...taxonomy, genus: e.target.value})} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase">种 (Species)</label>
-                      <input type="text" className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" value={taxonomy.species} onChange={e => setTaxonomy({...taxonomy, species: e.target.value})} />
-                    </div>
+                    {['class', 'order', 'family', 'genus', 'species'].map((level) => (
+                      <div key={level} className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">{level}</label>
+                        <input 
+                          type="text" 
+                          className="w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm" 
+                          value={(taxonomy as any)[level]} 
+                          onChange={e => setTaxonomy({...taxonomy, [level]: e.target.value})} 
+                        />
+                      </div>
+                    ))}
                  </div>
               </div>
 
-              {/* Distribution */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-black text-emerald-700 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">理论分布区域</h4>
@@ -338,7 +387,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">物种特征/习性描述</label>
-                <textarea rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500" placeholder="写下该鸟种的典型特征，有助于 AI 解析..." value={description} onChange={e => setDescription(e.target.value)} />
+                <textarea rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500" placeholder="描述该鸟种的典型特征..." value={description} onChange={e => setDescription(e.target.value)} />
               </div>
             </div>
 
@@ -352,8 +401,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ species, onUpdate, currentPin }
           </div>
         </div>
       )}
-
-      {/* AI Parsing Modal - Same structure but more bird elements could be added */}
     </div>
   );
 };

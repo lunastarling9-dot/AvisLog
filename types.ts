@@ -4,11 +4,13 @@ export interface BirdSpecies {
   name: string;
   latinName: string;
   taxonomy: {
-    order: string;
-    family: string;
-    genus: string;
+    class?: string;  // 纲
+    order: string;   // 目
+    family: string;  // 科
+    genus: string;   // 属
+    species?: string; // 种/亚种
   };
-  distribution: string[]; // List of provinces
+  distribution: string[]; // 理论分布省份
   description?: string;
   createdAt: number;
 }

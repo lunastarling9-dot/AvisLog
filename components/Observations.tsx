@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { BirdSpecies, Observation } from '../types';
-import { Plus, Search, Calendar, MapPin, Camera, Mic, X, Trash2, SlidersHorizontal, Sparkles, Play, Pause, Square } from 'lucide-react';
+import { Plus, Search, Calendar, MapPin, Camera, Mic, X, Trash2, SlidersHorizontal, Sparkles, Play, Pause, Square, CheckCircle2 } from 'lucide-react';
 import { PROVINCES } from '../constants';
 import { putItem, deleteItem } from '../db';
 import { getBirdInsight } from '../geminiService';
@@ -27,6 +27,7 @@ const Observations: React.FC<ObservationsProps> = ({ species, observations, onUp
   const [photo, setPhoto] = useState<string | null>(null);
   const [audio, setAudio] = useState<string | null>(null);
   const [speciesSearch, setSpeciesSearch] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   // Audio Recording States
   const [isRecording, setIsRecording] = useState(false);
@@ -46,6 +47,12 @@ const Observations: React.FC<ObservationsProps> = ({ species, observations, onUp
       reader.onloadend = () => setPhoto(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSelectSpecies = (bird: BirdSpecies) => {
+    setSelectedSpeciesId(bird.id);
+    setSpeciesSearch(bird.name);
+    setShowSearchDropdown(false);
   };
 
   const startRecording = async () => {
@@ -115,6 +122,7 @@ const Observations: React.FC<ObservationsProps> = ({ species, observations, onUp
     setPhoto(null);
     setAudio(null);
     setSpeciesSearch('');
+    setShowSearchDropdown(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -136,6 +144,8 @@ const Observations: React.FC<ObservationsProps> = ({ species, observations, onUp
       setIsLoadingInsight(false);
     }
   };
+
+  const selectedBird = species.find(s => s.id === selectedSpeciesId);
 
   return (
     <div className="space-y-6 animate-in">
@@ -247,28 +257,42 @@ const Observations: React.FC<ObservationsProps> = ({ species, observations, onUp
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">物种</label>
                   <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="搜索资料库..."
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-emerald-500"
-                      value={speciesSearch}
-                      onChange={(e) => setSpeciesSearch(e.target.value)}
-                    />
-                    {speciesSearch && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl max-h-48 overflow-y-auto z-50">
-                        {filteredSpeciesForSearch.map(s => (
-                          <button
-                            key={s.id}
-                            onClick={() => {
-                              setSelectedSpeciesId(s.id);
-                              setSpeciesSearch(s.name);
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-sm flex justify-between items-center"
-                          >
-                            <span className="font-bold">{s.name}</span>
-                            <span className="text-xs text-slate-400 italic">{s.latinName}</span>
-                          </button>
-                        ))}
+                    <div className={`relative flex items-center transition-all ${selectedSpeciesId ? 'ring-2 ring-emerald-500 rounded-xl' : ''}`}>
+                      <input
+                        type="text"
+                        placeholder="搜索资料库..."
+                        className={`w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-emerald-500 transition-all ${selectedSpeciesId ? 'bg-emerald-50 font-bold text-emerald-700 border-emerald-100' : ''}`}
+                        value={speciesSearch}
+                        onChange={(e) => {
+                          setSpeciesSearch(e.target.value);
+                          setSelectedSpeciesId('');
+                          setShowSearchDropdown(true);
+                        }}
+                        onFocus={() => setShowSearchDropdown(true)}
+                      />
+                      {selectedSpeciesId && (
+                        <div className="absolute right-3 flex items-center space-x-1 px-2 py-1 bg-white rounded-lg shadow-sm border border-emerald-100 animate-in">
+                          <CheckCircle2 size={14} className="text-emerald-500" />
+                          <span className="text-[10px] font-black text-emerald-600 uppercase">已选择</span>
+                        </div>
+                      )}
+                    </div>
+                    {showSearchDropdown && speciesSearch && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-50 animate-in">
+                        {filteredSpeciesForSearch.length > 0 ? (
+                          filteredSpeciesForSearch.map(s => (
+                            <button
+                              key={s.id}
+                              onClick={() => handleSelectSpecies(s)}
+                              className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-sm flex justify-between items-center border-b border-slate-50 last:border-0"
+                            >
+                              <span className="font-bold text-slate-700">{s.name}</span>
+                              <span className="text-xs text-slate-400 italic font-serif">{s.latinName}</span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-xs text-slate-400">未找到匹配鸟种</div>
+                        )}
                       </div>
                     )}
                   </div>

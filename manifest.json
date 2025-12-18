@@ -1,0 +1,18 @@
+
+{
+  "name": "AvisLog - 私人鸟类观测系统",
+  "short_name": "AvisLog",
+  "description": "高端私人鸟类观测与管理系统",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/528/528076.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

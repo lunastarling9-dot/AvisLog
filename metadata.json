@@ -1,0 +1,9 @@
+{
+  "name": "AvisLog",
+  "description": "A high-end private bird observation and management system for avian enthusiasts, featuring AI-powered data entry and regional progress tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

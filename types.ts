@@ -4,13 +4,13 @@ export interface BirdSpecies {
   name: string;
   latinName: string;
   taxonomy: {
-    class?: string;  // 纲
-    order: string;   // 目
-    family: string;  // 科
-    genus: string;   // 属
-    species?: string; // 种/亚种
+    class?: string;
+    order: string;
+    family: string;
+    genus: string;
+    species?: string;
   };
-  distribution: string[]; // 理论分布省份
+  distribution: string[];
   description?: string;
   createdAt: number;
 }
@@ -23,8 +23,8 @@ export interface Observation {
   location: string;
   count: number;
   notes: string;
-  photo?: string; // base64
-  audio?: string; // base64
+  photo?: string;
+  audio?: string;
   coords?: {
     lat: number;
     lng: number;
@@ -32,4 +32,5 @@ export interface Observation {
   createdAt: number;
 }
 
+export type AuthLevel = 'none' | 'admin' | 'master';
 export type AppView = 'dashboard' | 'species' | 'observations' | 'regions' | 'admin';
